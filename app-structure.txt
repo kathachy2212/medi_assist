@@ -1,0 +1,34 @@
+templates/
+│
+├── registration/
+│   ├── login.html
+│   └── signup.html
+│
+├── users/
+│   └── profile.html
+│
+└── prescriptions/
+    ├── select_disease.html
+    ├── chat.html
+    └── prescription_list.html
+
+static/
+├── css/
+├── js/
+└── images/
+
+
+
+
+
+mediassist/
+├── manage.py
+├── mediassist/
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── prescriptions/
+├── users/
+└── templates/
+    └── base.html

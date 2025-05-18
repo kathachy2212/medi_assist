@@ -1,0 +1,11 @@
+<h2>Prescription Report</h2>
+<p><strong>Patient:</strong> {{ user.get_full_name }}</p>
+<p><strong>Date:</strong> {{ messages.last.timestamp|date:"Y-m-d H:i" }}</p>
+<hr>
+<h4>Diagnosis Summary:</h4>
+<ul>
+  {% for message in messages %}
+    <li>{{ message.message }}</li>
+  {% endfor %}
+</ul>
+<p><strong>Note:</strong> This is a system-generated prescription based on symptom data.</p>

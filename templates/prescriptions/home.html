@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1 class="mb-4">Select Disease</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="disease" class="form-label">Choose a disease for chat :</label>
+      <select name="disease" id="disease" class="form-select" required>
+        <option value="" disabled selected>Select a disease</option>
+        {% for disease in diseases %}
+          <option value="{{ disease.id }}">{{ disease.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-success">Submit</button>
+  </form>
+  
+</div>
+{% endblock %}

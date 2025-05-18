@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+  <div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <!-- Right-aligned Title -->
+      <h2 class="text-end">{{ title }}</h2>
+      <a href="{% url 'disease_list' %}" class="btn btn-secondary mt-3">Back to Disease List</a>
+    </div>
+
+    <!-- Card for the form -->
+    <div class="card shadow p-4">
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          
+          <!-- Form fields inside the card -->
+          <div class="mb-3">
+            <label for="id_name" class="form-label">Disease Name</label>
+            {{ form.name|add_class:"form-control" }}
+          </div>
+
+          <div class="mb-3">
+            <label for="id_description" class="form-label">Description</label>
+            {{ form.description|add_class:"form-control" }}
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn btn-success w-100">Save</button>
+        </form>
+      </div>
+    </div>
+
+   
+  
+   
+  </div>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .chat-container {
+        max-width: 700px;
+        margin: 40px auto;
+        background-color: #f9f9f9;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    #chat-box {
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+
+    .user-message,
+    .bot-message {
+        margin-bottom: 15px;
+        padding: 12px 18px;
+        border-radius: 18px;
+        max-width: 80%;
+        word-wrap: break-word;
+    }
+
+    .bot-message {
+        background-color: #e1f5fe;
+        margin: 8px 0;
+        padding: 8px 12px;
+        border-radius: 10px;
+        width: fit-content;
+        max-width: 80%;
+    }
+
+    .user-message {
+        background-color: #c8e6c9;
+        margin: 8px 0;
+        padding: 8px 12px;
+        border-radius: 10px;
+        align-self: flex-end;
+        width: fit-content;
+        max-width: 80%;
+        margin-left: auto;
+    }
+
+    form {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    form input[type="text"] {
+        flex: 1;
+        padding: 12px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+    }
+
+    form button {
+        padding: 12px 20px;
+        background-color: #0a84ff;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .final-buttons {
+        margin-top: 30px;
+        text-align: center;
+    }
+
+    .final-buttons a {
+        display: inline-block;
+        margin: 0 10px;
+        padding: 12px 20px;
+        text-decoration: none;
+        background-color: #0a84ff;
+        color: white;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+
+    .final-buttons a:hover {
+        background-color: #0066cc;
+    }
+</style>
+
+<div class="chat-container">
+    <h2 style="text-align:center;">Chat with the Doctor</h2>
+
+    <div id="chat-box">
+        {% for message in messages %}
+            <div class="{% if message.is_bot %}bot-message{% else %}user-message{% endif %}">
+                {{ message.message|linebreaks }}
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if not request.session.chat_complete %}
+    <form method="POST" action="">
+        {% csrf_token %}
+        <input type="text" name="message" placeholder="Type your symptoms..." required />
+        <button type="submit">Send</button>
+    </form>
+    {% endif %}
+
+    {% if request.session.chat_complete %}
+        <div class="final-buttons">
+            <p><strong>Your prescription is ready.</strong></p>
+            <a href="{% url 'download_prescription' %}">Download Prescription PDF</a>
+            <a href="{% url 'home' %}">Go Back to Home</a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+  // Auto-scroll to the bottom of the chat box
+  const chatBox = document.getElementById("chat-box");
+  if (chatBox) {
+      chatBox.scrollTop = chatBox.scrollHeight;
+  }
+</script>
+{% endblock %}
