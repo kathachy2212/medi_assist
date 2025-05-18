@@ -1,2 +1,2 @@
 # medi_assist
-MediAssist — AI-Powered Medical Consultation Platform (Using Python Django Framework)
+MediAssist — AI-Powered Medical Consultation Platform (Using Python Django Framework).
