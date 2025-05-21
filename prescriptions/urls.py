@@ -16,4 +16,9 @@ urlpatterns = [
     path('add/', views.disease_create, name='disease_create'),
     path('edit/<int:pk>/', views.disease_update, name='disease_update'),
     path('delete/<int:pk>/', views.disease_delete, name='disease_delete'),
+    
+    
+     path('disease/<int:disease_id>/chat/', views.disease_chat, name='disease_chat'),
+    path('disease/<int:disease_id>/chat/<int:chat_id>/', views.disease_chat, name='edit_chat'),
+    path('chat/delete/<int:chat_id>/', views.chat_delete, name='chat_delete'),
 ]

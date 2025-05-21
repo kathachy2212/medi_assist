@@ -7,6 +7,7 @@ from django.views.decorators.http import require_POST
 
 from django.http import HttpResponse
 from .models import ChatMessage
+from .forms import ChatMessageForm
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 
@@ -71,6 +72,53 @@ def disease_delete(request, pk):
     disease = get_object_or_404(Disease, pk=pk)
     disease.delete()
     return redirect('disease_list')
+
+
+
+
+
+@login_required
+def disease_chat(request, disease_id, chat_id=None):
+    disease = get_object_or_404(Disease, id=disease_id)
+    chat_messages = ChatMessage.objects.filter(disease=disease).order_by('-timestamp')
+
+    if chat_id:
+        chat_instance = get_object_or_404(ChatMessage, id=chat_id)
+    else:
+        chat_instance = None
+
+    if request.method == 'POST':
+        form = ChatMessageForm(request.POST, instance=chat_instance)
+        if form.is_valid():
+            chat = form.save(commit=False)
+            chat.user = request.user
+            chat.disease = disease
+            chat.save()
+            return redirect('disease_chat', disease_id=disease_id)
+    else:
+        form = ChatMessageForm(instance=chat_instance)
+
+    return render(request, 'prescriptions/disease_chat.html', {
+        'disease': disease,
+        'form': form,
+        'chat_messages': chat_messages,
+        'chat_id': chat_id,
+    })
+    
+    
+    
+
+@login_required
+def chat_delete(request, chat_id):
+    chat = get_object_or_404(ChatMessage, id=chat_id)
+    disease_id = chat.disease.id
+    if request.method == 'POST':
+        chat.delete()
+    return redirect('disease_chat', disease_id=disease_id)
+
+
+
+
 
 
 @login_required
