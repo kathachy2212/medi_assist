@@ -16,17 +16,24 @@
                         <div class="text-danger small">{{ form.message.errors }}</div>
                     {% endif %}
                 </div>
+
+                <div class="form-check mb-3">
+                    <label class="form-check-label pe-xxl-3" for="{{ form.is_bot.id_for_label }}">{{ form.is_bot.label }}</label>
+                    {{ form.is_bot }}
+                </div>
+
                 <button type="submit" class="btn btn-success">
                     {% if chat_id %} Update Message {% else %} Send Message {% endif %}
                 </button>
+
                 {% if chat_id %}
-                <a href="{% url 'disease_chat' disease.id %}" class="btn btn-secondary">Cancel Edit</a>
+                    <a href="{% url 'disease_chat' disease.id %}" class="btn btn-secondary">Cancel Edit</a>
                 {% endif %}
             </form>
         </div>
 
         <!-- Message List Section -->
-        <div class="col-md-8">
+         <div class="col-md-8">
             <h5 class="mb-3">Messages</h5>
             <table class="table table-bordered table-striped">
                 <thead class="table-dark">
@@ -51,6 +58,7 @@
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-danger delete-btn">Delete</button>
                             </form>
+                            <a href="{% url 'manage_possible_answers' chat.id %}" class="btn btn-sm btn-info mt-1">Manage Answers</a>
                         </td>
                     </tr>
                     {% empty %}

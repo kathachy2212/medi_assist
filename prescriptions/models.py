@@ -18,3 +18,12 @@ class ChatMessage(models.Model):
 
     def __str__(self):
         return f"{'Bot' if self.is_bot else 'User'}: {self.message[:40]}"
+    
+    
+    
+class ChatResponseSuggestion(models.Model):
+    chat_message = models.ForeignKey(ChatMessage, related_name='suggestions', on_delete=models.CASCADE)
+    text = models.CharField(max_length=500)
+
+    def __str__(self):
+        return self.text

@@ -18,7 +18,11 @@ urlpatterns = [
     path('delete/<int:pk>/', views.disease_delete, name='disease_delete'),
     
     
-     path('disease/<int:disease_id>/chat/', views.disease_chat, name='disease_chat'),
+    path('disease/<int:disease_id>/chat/', views.disease_chat, name='disease_chat'),
     path('disease/<int:disease_id>/chat/<int:chat_id>/', views.disease_chat, name='edit_chat'),
     path('chat/delete/<int:chat_id>/', views.chat_delete, name='chat_delete'),
+    
+    
+    path('chat/<int:message_id>/manage-answers/', views.manage_possible_answers, name='manage_possible_answers'),
+    path('suggestion/<int:suggestion_id>/delete/', views.delete_possible_answer, name='delete_possible_answer'),
 ]

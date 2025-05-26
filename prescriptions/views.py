@@ -6,8 +6,8 @@ from .forms import DiseaseForm
 from django.views.decorators.http import require_POST
 
 from django.http import HttpResponse
-from .models import ChatMessage
-from .forms import ChatMessageForm
+from .models import ChatMessage,ChatResponseSuggestion
+from .forms import ChatMessageForm,ChatResponseSuggestionForm
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 
@@ -16,7 +16,6 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from io import BytesIO
 import datetime
-
 
 
 
@@ -65,6 +64,7 @@ def disease_update(request, pk):
         form = DiseaseForm(instance=disease)
     return render(request, 'prescriptions/disease_form.html', {'form': form, 'title': 'Edit Disease'})
 
+
 # Disease Delete View
 @require_POST
 @login_required
@@ -105,8 +105,6 @@ def disease_chat(request, disease_id, chat_id=None):
         'chat_id': chat_id,
     })
     
-    
-    
 
 @login_required
 def chat_delete(request, chat_id):
@@ -115,6 +113,46 @@ def chat_delete(request, chat_id):
     if request.method == 'POST':
         chat.delete()
     return redirect('disease_chat', disease_id=disease_id)
+
+
+def manage_possible_answers(request, message_id):
+    chat_message = get_object_or_404(ChatMessage, id=message_id)
+    suggestions = chat_message.suggestions.all()
+
+    edit_suggestion = None
+    if 'edit' in request.GET:
+        edit_id = request.GET.get('edit')
+        edit_suggestion = get_object_or_404(ChatResponseSuggestion, id=edit_id, chat_message=chat_message)
+
+    if request.method == 'POST':
+        form = ChatResponseSuggestionForm(request.POST, instance=edit_suggestion)
+        if form.is_valid():
+            suggestion = form.save(commit=False)
+            suggestion.chat_message = chat_message
+            suggestion.save()
+            return redirect('manage_possible_answers', message_id=message_id)
+    else:
+        form = ChatResponseSuggestionForm(instance=edit_suggestion)
+
+    return render(request, 'prescriptions/manage_possible_answers.html', {
+        'chat_message': chat_message,
+        'form': form,
+        'suggestions': suggestions,
+        'edit_suggestion': edit_suggestion,
+    })
+
+    
+    
+
+def delete_possible_answer(request, suggestion_id):
+    suggestion = get_object_or_404(ChatResponseSuggestion, id=suggestion_id)
+    message_id = suggestion.chat_message.id
+    suggestion.delete()
+    return redirect('manage_possible_answers', message_id=message_id)
+
+
+
+
 
 
 
@@ -135,10 +173,6 @@ def start_chat(request, disease_id):
 
 
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.decorators import login_required
-from .models import Disease, ChatMessage
 
 universal_chat_steps = [
     "Hi, do you feel weak?",

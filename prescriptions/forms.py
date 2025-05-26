@@ -1,5 +1,5 @@
 from django import forms
-from .models import Disease,ChatMessage
+from .models import Disease, ChatMessage,ChatResponseSuggestion
 
 class DiseaseForm(forms.ModelForm):
     class Meta:
@@ -9,17 +9,31 @@ class DiseaseForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'placeholder': 'Enter disease name'}),
             'description': forms.Textarea(attrs={'placeholder': 'Enter disease description'}),
         }
-        
 
 class ChatMessageForm(forms.ModelForm):
     class Meta:
         model = ChatMessage
-        fields = ['message']
+        fields = ['message', 'is_bot']
         labels = {
             'message': 'Your Message',
+            'is_bot': 'Send as Bot',
         }
 
     def __init__(self, *args, **kwargs):
         super(ChatMessageForm, self).__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
+            # Don't apply 'form-control' to checkboxes
+            if not isinstance(field.widget, forms.CheckboxInput):
+                field.widget.attrs['class'] = 'form-control'
+                
+                
+class ChatResponseSuggestionForm(forms.ModelForm):
+    class Meta:
+        model = ChatResponseSuggestion
+        fields = ['text']
+        labels = {
+            'text': 'Possible Answer',
+        }
+        widgets = {
+            'text': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter possible answer'}),
+        }
