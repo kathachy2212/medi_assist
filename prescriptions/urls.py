@@ -25,4 +25,8 @@ urlpatterns = [
     
     path('chat/<int:message_id>/manage-answers/', views.manage_possible_answers, name='manage_possible_answers'),
     path('suggestion/<int:suggestion_id>/delete/', views.delete_possible_answer, name='delete_possible_answer'),
+    
+    
+    path('disease/<int:disease_id>/symptom-medicines/', views.manage_symptom_medicines, name='manage_symptom_medicines'),
+    path('symptom-medicine/delete/', views.delete_symptom_medicine, name='delete_symptom_medicine'),
 ]

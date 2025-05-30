@@ -1,5 +1,6 @@
 from django import forms
-from .models import Disease, ChatMessage,ChatResponseSuggestion
+from django.forms import modelformset_factory
+from .models import Disease, ChatMessage,ChatResponseSuggestion,SymptomMedicine
 
 class DiseaseForm(forms.ModelForm):
     class Meta:
@@ -36,4 +37,14 @@ class ChatResponseSuggestionForm(forms.ModelForm):
         }
         widgets = {
             'text': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter possible answer'}),
+        }
+        
+        
+class SymptomMedicineForm(forms.ModelForm):
+    class Meta:
+        model = SymptomMedicine
+        fields = ['symptom', 'medicine_name']
+        widgets = {
+            'symptom': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter symptom'}),
+            'medicine_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter medicine'}),
         }

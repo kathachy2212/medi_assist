@@ -27,3 +27,12 @@ class ChatResponseSuggestion(models.Model):
 
     def __str__(self):
         return self.text
+    
+    
+class SymptomMedicine(models.Model):
+    disease = models.ForeignKey(Disease, on_delete=models.CASCADE, related_name='symptom_medicines')
+    symptom = models.CharField(max_length=200)
+    medicine_name = models.CharField(max_length=200)
+
+    def __str__(self):
+        return f"{self.symptom} - {self.medicine_name}"

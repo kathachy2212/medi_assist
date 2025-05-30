@@ -6,8 +6,9 @@ from .forms import DiseaseForm
 from django.views.decorators.http import require_POST
 
 from django.http import HttpResponse
-from .models import ChatMessage,ChatResponseSuggestion
-from .forms import ChatMessageForm,ChatResponseSuggestionForm
+from .models import ChatMessage,ChatResponseSuggestion,SymptomMedicine
+from .forms import ChatMessageForm,ChatResponseSuggestionForm,SymptomMedicineForm
+from django.forms import modelformset_factory
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 
@@ -16,6 +17,9 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from io import BytesIO
 import datetime
+import json
+from django.http import JsonResponse
+from django.urls import reverse
 
 
 
@@ -152,6 +156,57 @@ def delete_possible_answer(request, suggestion_id):
 
 
 
+
+def manage_symptom_medicines(request, disease_id):
+    disease = get_object_or_404(Disease, pk=disease_id)
+
+    SymptomMedicineFormSet = modelformset_factory(
+        SymptomMedicine,
+        form=SymptomMedicineForm,
+        extra=1,
+        can_delete=True  # ✅ Allow deletions
+    )
+
+    queryset = SymptomMedicine.objects.filter(disease=disease)
+
+    if request.method == 'POST':
+        formset = SymptomMedicineFormSet(request.POST, queryset=queryset)
+        if formset.is_valid():
+            edited = False
+
+            # Save new/updated instances
+            instances = formset.save(commit=False)
+            for instance in instances:
+                instance.disease = disease
+                instance.save()
+                edited = True
+            formset.save_m2m()
+
+            # Redirect with appropriate message
+            query_param = "edited=1" if edited else "saved=1"
+            return redirect(f"{reverse('manage_symptom_medicines', args=[disease.id])}?{query_param}")
+    else:
+        formset = SymptomMedicineFormSet(queryset=queryset)
+
+    return render(request, 'symptom_medicine/manage.html', {
+        'formset': formset,
+        'disease': disease
+    })
+    
+
+
+@csrf_exempt
+def delete_symptom_medicine(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            sm_id = data.get("id")
+            obj = get_object_or_404(SymptomMedicine, pk=sm_id)
+            obj.delete()
+            return JsonResponse({"success": True, "message": "Deleted successfully."})
+        except Exception as e:
+            return JsonResponse({"success": False, "message": str(e)})
+    return JsonResponse({"success": False, "message": "Invalid request method."})
 
 
 
