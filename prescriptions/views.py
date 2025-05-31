@@ -323,109 +323,95 @@ def disease_list(request):
 def similarity(a, b):
     return SequenceMatcher(None, a.lower(), b.lower()).ratio()
 
-
 @login_required
 @csrf_exempt
 def chat(request, disease_id):
     disease = get_object_or_404(Disease, id=disease_id)
 
+    # Start fresh on GET: clear all session data
     if request.method == "GET":
-        # Only reset session and delete chat messages if chat not started yet
-        if not request.session.get('chat_started', False):
-            # Reset session chat steps
-            request.session['chat_step'] = 0
-            request.session['chat_complete'] = False
+        request.session['chat_step'] = 0
+        request.session['chat_complete'] = False
+        request.session['chat_history'] = []
 
-            # Delete previous chat messages for this user and disease
-            # ChatMessage.objects.filter(user=request.user, disease=disease).delete()
+        # Load bot questions from DB
+        questions_qs = ChatMessage.objects.filter(disease=disease, is_bot=True).order_by('timestamp')
+        questions = list(questions_qs.values_list('message', flat=True))
+        request.session['chat_questions'] = questions
 
-            # Load bot questions ONLY for this disease
-            questions_qs = ChatMessage.objects.filter(disease=disease, is_bot=True).order_by('timestamp')
-            questions = list(questions_qs.values_list('message', flat=True))
-            request.session['chat_questions'] = questions
+        # Send first bot message
+        if questions:
+            request.session['chat_history'].append({"sender": "bot", "message": questions[0]})
 
-            # Create first bot message if questions exist
-            if questions:
-                ChatMessage.objects.create(user=request.user, disease=disease, message=questions[0], is_bot=True)
-
-            # Mark chat as started
-            request.session['chat_started'] = True
-
-    # Get current chat progress from session
-    step = request.session.get('chat_step', 0)
-    complete = request.session.get('chat_complete', False)
+    # Load from session
     questions = request.session.get('chat_questions', [])
+    chat_step = request.session.get('chat_step', 0)
+    chat_complete = request.session.get('chat_complete', False)
+    chat_history = request.session.get('chat_history', [])
 
-    if request.method == "POST" and not complete:
+    # POST: handle user input
+    if request.method == "POST" and not chat_complete:
         user_input = request.POST.get("message", "").strip()
         if user_input:
-            # Save user input
-            ChatMessage.objects.create(user=request.user, disease=disease, message=user_input, is_bot=False)
+            chat_history.append({"sender": "user", "message": user_input})
 
-            current_question = questions[step]
-            try:
-                current_chat_msg = ChatMessage.objects.get(disease=disease, is_bot=True, message=current_question)
-            except ChatMessage.DoesNotExist:
-                current_chat_msg = None
+            current_question = questions[chat_step] if chat_step < len(questions) else None
+            suggestions = ChatResponseSuggestion.objects.filter(
+                chat_message__message=current_question,
+                chat_message__disease=disease
+            ) if current_question else []
 
-            suggestions = ChatResponseSuggestion.objects.filter(chat_message=current_chat_msg) if current_chat_msg else ChatResponseSuggestion.objects.none()
-
-            matched = False
-            for suggestion in suggestions:
-                if similarity(user_input, suggestion.text) >= 0.6:  # 60% threshold
-                    matched = True
-                    break
+            matched = any(similarity(user_input, s.text) >= 0.6 for s in suggestions)
 
             if not matched:
-                suggestion_texts = [s.text for s in suggestions]
-                ChatMessage.objects.create(
-                    user=request.user,
-                    disease=disease,
-                    message=f"Please give a correct answer. Did you mean: {', '.join(suggestion_texts)}?",
-                    is_bot=True
-                )
-                messages = ChatMessage.objects.filter(user=request.user, disease=disease).order_by("timestamp")
+                suggestion_msg = "Please give a correct answer."
+                chat_history.append({"sender": "bot", "message": suggestion_msg})
+                request.session['chat_history'] = chat_history
                 return render(request, "prescriptions/chatbot.html", {
-                    "messages": messages,
+                    "messages": chat_history,
                     "disease": disease,
                     "show_yes_no": False
                 })
 
-            # User input matched, advance step
-            step += 1
-            request.session['chat_step'] = step
+            # Move to next question
+            chat_step += 1
+            request.session['chat_step'] = chat_step
 
-            if step < len(questions):
-                next_question = questions[step]
-                ChatMessage.objects.create(user=request.user, disease=disease, message=next_question, is_bot=True)
+            if chat_step < len(questions):
+                next_bot_message = questions[chat_step]
+                chat_history.append({"sender": "bot", "message": next_bot_message})
             else:
-                user_msgs = ChatMessage.objects.filter(user=request.user, disease=disease, is_bot=False)
-                symptoms = [msg.message for msg in user_msgs]
-
-                prescribed = []
-                for entry in SymptomMedicine.objects.all():
-                    for symptom in symptoms:
-                        if similarity(symptom, entry.symptom) >= 0.7:
-                            prescribed.append(entry.medicine_name)
-                            break
-
-                if not prescribed:
-                    prescribed = ["Consult a doctor for a proper diagnosis."]
-
-                ChatMessage.objects.create(user=request.user, disease=disease, message="Thank you. Here is your prescription:", is_bot=True)
-                ChatMessage.objects.create(user=request.user, disease=disease, message="\n".join(set(prescribed)), is_bot=True)
                 request.session['chat_complete'] = True
 
-    messages = ChatMessage.objects.filter(user=request.user, disease=disease).order_by("timestamp")
-    show_yes_no = not complete and step < len(questions)
+                user_answers = [msg['message'] for msg in chat_history if msg['sender'] == "user"]
+                prescribed = []
+
+                for entry in SymptomMedicine.objects.all():
+                    if any(similarity(ans, entry.symptom) >= 0.7 for ans in user_answers):
+                        prescribed.append(entry.medicine_name)
+
+                if not prescribed:
+                    chat_history.append({
+                        "sender": "bot",
+                        "message": "Sorry, your symptoms don't match our database. Please consult a doctor."
+                    })
+                else:
+                    chat_history.append({
+                        "sender": "bot",
+                        "message": "Thank you. Here is your prescription:"
+                    })
+                    chat_history.append({
+                        "sender": "bot",
+                        "message": "\n".join(set(prescribed))
+                    })
+
+        request.session['chat_history'] = chat_history
 
     return render(request, "prescriptions/chatbot.html", {
-        "messages": messages,
+        "messages": request.session.get('chat_history', []),
         "disease": disease,
-        "show_yes_no": show_yes_no
+        "show_yes_no": not chat_complete and chat_step < len(questions)
     })
-
-
 
 
 
