@@ -23,12 +23,14 @@
                 </div>
 
                 <button type="submit" class="btn btn-success">
-                    {% if chat_id %} Update Message {% else %} Send Message {% endif %}
+                    {% if chat_id %} Update Message {% else %} Save Message {% endif %}
                 </button>
 
                 {% if chat_id %}
                     <a href="{% url 'disease_chat' disease.id %}" class="btn btn-secondary">Cancel Edit</a>
                 {% endif %}
+
+                <a href="{% url 'disease_list' %}" class="btn btn-secondary">Back</a>
             </form>
         </div>
 
@@ -38,7 +40,7 @@
             <table class="table table-bordered table-striped">
                 <thead class="table-dark">
                     <tr>
-                        <th>User</th>
+                        {% comment %} <th>User</th> {% endcomment %}
                         <th>Message</th>
                         <th>Bot?</th>
                         <th>Time</th>
@@ -48,7 +50,7 @@
                 <tbody>
                     {% for chat in chat_messages %}
                     <tr>
-                        <td>{{ chat.user.username }}</td>
+                        {% comment %} <td>{{ chat.user.username }}</td> {% endcomment %}
                         <td>{{ chat.message }}</td>
                         <td>{{ chat.is_bot }}</td>
                         <td>{{ chat.timestamp|date:"M d, Y H:i" }}</td>
@@ -72,8 +74,7 @@
     </div>
 </div>
 
-<!-- SweetAlert -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     document.querySelectorAll('.delete-form').forEach(form => {
         form.addEventListener('submit', function (e) {

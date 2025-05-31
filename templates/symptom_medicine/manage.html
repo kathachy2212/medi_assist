@@ -31,10 +31,13 @@
                     <td>{{ form.medicine_name }}</td>
                     <td class="text-center">
                         {% if form.instance.pk %}
-                            <button type="button" class="btn btn-sm btn-outline-primary me-2" title="Edit">
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary me-2 edit-btn"
+                                    data-index="{{ forloop.counter0 }}">
                                 <i class="bi bi-pencil-square"></i> Edit
                             </button>
-                            <button type="button" class="btn btn-sm btn-outline-danger delete-btn"
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-danger delete-btn"
                                     data-id="{{ form.instance.pk }}">
                                 <i class="bi bi-trash"></i> Delete
                             </button>
@@ -47,18 +50,13 @@
             </tbody>
         </table>
     </div>
-    <!-- <button type="submit" class="btn btn-primary">Save All</button> -->
 </form>
 
-<!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<!-- Bootstrap Icons -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    // DELETE BUTTON
     const deleteButtons = document.querySelectorAll(".delete-btn");
-
     deleteButtons.forEach(function (button) {
         button.addEventListener("click", function () {
             const id = this.getAttribute("data-id");
@@ -98,6 +96,27 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
     });
+
+    // EDIT BUTTON
+    const editButtons = document.querySelectorAll(".edit-btn");
+    editButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+            Swal.fire({
+                title: "Are you sure?",
+                text: "Do you want to update this symptom medicine?",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#aaa",
+                confirmButtonText: "Yes, update it!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById("symptomForm").submit();
+                }
+            });
+        });
+    });
+    
 });
 </script>
 {% endblock %}
